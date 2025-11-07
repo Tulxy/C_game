@@ -89,11 +89,11 @@ int pub_menu() {
             stats_add(40, 5);
             break;
         case 4:
-            printf("Amazing chiken! [+80 HP]\n");
+            printf("Amazing chicken! [+80 HP]\n");
             stats_add(80, 8);
             break;
         case 5:
-            printf("Leaving th pub!\n");
+            printf("Leaving the pub!\n");
             break;
         default:
             printf("Invalid choice!\n");
@@ -283,15 +283,10 @@ int player_attack(int *ss_wait_time, int *fb_wait_time, int *mjz_wait_time) {
 void attacks(int monster_hp, int monster_attack, char monster_name[], int monster_reward, int monster_xp) {
     int attack_turn = 1;
 
-    int punch = 4;
-
-    int sword_slash = 10;
     int ss_wait_time = 1;
 
-    int fireball = 30;
     int fb_wait_time = 2;
 
-    int mrd_jak_zmrd = 60;
     int mjz_wait_time = 4;
 
 
@@ -306,14 +301,19 @@ void attacks(int monster_hp, int monster_attack, char monster_name[], int monste
             switch (eq_sword) {
                 case 1:
                     damage += 3;
+                    break;
                 case 2:
                     damage += 8;
+                    break;
                 case 3:
                     damage += 14;
+                    break;
                 case 4:
                     damage += 50;
+                    break;
                 case 5:
                     damage += 400;
+                    break;
             }
             if (damage > 0) {
                 monster_hp -= damage;
@@ -414,6 +414,8 @@ void blacksmith_print(int level) {
         printf("5. -- You need level 50 to unlock this sword --");
     }
     printf("\n");
+    printf("6. Exit");
+    printf("\n");
 }
 
 void blacksmith_menu() {
@@ -434,6 +436,7 @@ void blacksmith_menu() {
             } else {
                 printf("You don't have enough money!");
             }
+            break;
         case 2:
             if (money >= 35) {
                 money -= 35;
@@ -441,6 +444,7 @@ void blacksmith_menu() {
             } else {
                 printf("You don't have enough money!");
             }
+            break;
         case 3:
             if (money >= 55) {
                 money -= 55;
@@ -448,6 +452,7 @@ void blacksmith_menu() {
             } else {
                 printf("You don't have enough money!");
             }
+            break;
         case 4:
             if (money >= 180) {
                 money -= 180;
@@ -455,6 +460,7 @@ void blacksmith_menu() {
             } else {
                 printf("You don't have enough money!");
             }
+            break;
         case 5:
             if (level >= 50) {
                 if (money >= 500) {
@@ -466,6 +472,9 @@ void blacksmith_menu() {
             } else {
                 printf("Your level is too low!");
             }
+            break;
+        case 6:
+            printf("Goodbye.");
             break;
         default:
             printf("Invalid choice");
@@ -535,6 +544,7 @@ void game(void) {
             break;
         case 4:
             printf("You chose go to the Blacksmith");
+            blacksmith_menu();
             break;
         case 5:
             printf("Thanks for playing!");
@@ -546,7 +556,7 @@ void game(void) {
 
 
     // Pokud hráč nevybral ukončení, hra pokračuje rekurzivně
-    if (choice != 4) {
+    if (choice != 5) {
         game();
     }
 }
