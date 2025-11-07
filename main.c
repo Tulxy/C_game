@@ -7,11 +7,13 @@ unsigned short hp = 100; // 10HP v Klaudiusz
 unsigned int money = 10; // 10 zlatých v základu
 int xp = 0; // Zkušenostní body hráče
 
+int eq_sword = 0;
+
 
 // Funkce pro výpis aktuálních statistik hráče
 void print_stats() {
     int level = xp / 10;
-    int full_hearts = hp / 10;         // Počet plných srdíček
+    int full_hearts = hp / 10; // Počet plných srdíček
     int empty_hearts = (max_hp - hp) / 10; // Počet prázdných srdíček
 
     printf("\n");
@@ -41,13 +43,13 @@ void pub_print() {
     printf("\n");
     printf("--- [HP: %d] --- [$: %d] ---", hp, money);
     printf("\n");
-    printf("1. Drink ......... $3 [+2 HP]");
+    printf("1. Drink ......... $3 [+20 HP]");
     printf("\n");
-    printf("2. Beer .......... $1 [+1 HP]");
+    printf("2. Beer .......... $1 [+10 HP]");
     printf("\n");
-    printf("3. Soup .......... $5 [+4 HP]");
+    printf("3. Soup .......... $5 [+40 HP]");
     printf("\n");
-    printf("4. Chicken ....... $8 [+10 HP]");
+    printf("4. Chicken ....... $8 [+80 HP]");
     printf("\n");
     printf("5. Back");
     printf("\n\n");
@@ -198,14 +200,131 @@ void training_menu() {
 
 // Arena functions
 
-void attacks(int monster_hp, int monster_attack, char monster_name[]) {
+int player_attack(int *ss_wait_time, int *fb_wait_time, int *mjz_wait_time) {
+    int punch = 4;
+    int sword_slash = 10;
+    int fireball = 30;
+    int mrd_jak_zmrd = 60;
+
+    int level = xp / 10;
+
+    int attack_choice = 0;
+    int valid_choice = 0;
+
+    while (!valid_choice) {
+        printf("1. Punch .......... [Damage 4HP]\n");
+        printf("2. Sword Slash .... [Damage 10HP]\n");
+        printf("3. Fireball ....... [Damage 30HP]\n");
+        printf("4. Mrd jak zmrd ... [Damage 60HP]\n");
+        if (level >= 5) {
+            printf("5. Ultimate Sword Slash ... [Damage 75HP]\n");
+        } else if (level < 5) {
+            printf("5. -- You need level 5 to unlock! --\n");
+        }
+
+        if (level >= 10) {
+            printf("6. Arcane Spell ... [Damage 95HP]\n");
+        } else if (level < 10) {
+            printf("6. -- You need level 10 to unlock! --\n");
+        }
+
+        if (level >= 35) {
+            printf("7. Destroyer punch ... [Damage 150HP]\n");
+        } else if (level < 35) {
+            printf("7. -- You need level 35 to unlock! --\n");
+        }
+
+        printf("Your choice: ");
+        scanf("%d", &attack_choice);
+        printf("\n");
+
+        switch (attack_choice) {
+            case 1:
+                valid_choice = 1;
+                return punch;
+            case 2:
+                if (*ss_wait_time > 0) {
+                    printf("You can use this attack again in %d rounds\n\n", *ss_wait_time);
+                } else {
+                    *ss_wait_time = 2;
+                    valid_choice = 1;
+                    printf("You used Sword Slash!\n\n");
+                    return sword_slash;
+                }
+                break;
+            case 3:
+                if (*fb_wait_time > 0) {
+                    printf("You can use this attack again in %d rounds\n\n", *fb_wait_time);
+                } else {
+                    *fb_wait_time = 3;
+                    valid_choice = 1;
+                    printf("You used Fireball!\n\n");
+                    return fireball;
+                }
+                break;
+            case 4:
+                if (*mjz_wait_time > 0) {
+                    printf("You can use this attack again in %d rounds\n\n", *mjz_wait_time);
+                } else {
+                    *mjz_wait_time = 5;
+                    valid_choice = 1;
+                    printf("You used Mrd jak Zmrd!\n\n");
+                    return mrd_jak_zmrd;
+                }
+                break;
+            default:
+                printf("Invalid choice!\n\n");
+        }
+    }
+
+    return 0;
+}
+
+void attacks(int monster_hp, int monster_attack, char monster_name[], int monster_reward, int monster_xp) {
     int attack_turn = 1;
+
+    int punch = 4;
+
+    int sword_slash = 10;
+    int ss_wait_time = 1;
+
+    int fireball = 30;
+    int fb_wait_time = 2;
+
+    int mrd_jak_zmrd = 60;
+    int mjz_wait_time = 4;
+
+
+
     printf("You're fighting with %s!\n", monster_name);
 
     while (hp > 0 && monster_hp > 0) {
         if (attack_turn % 2 == 1) {
             printf("Your turn, Attack!\n");
-            monster_hp -= 1;
+
+            int damage = player_attack(&ss_wait_time, &fb_wait_time, &mjz_wait_time);
+            switch (eq_sword) {
+                case 1:
+                    damage += 3;
+                case 2:
+                    damage += 8;
+                case 3:
+                    damage += 14;
+                case 4:
+                    damage += 50;
+                case 5:
+                    damage += 400;
+            }
+            if (damage > 0) {
+                monster_hp -= damage;
+                ss_wait_time -= 1;
+                fb_wait_time -= 1;
+                mjz_wait_time -= 1;
+                if (ss_wait_time < 0) ss_wait_time = 0;
+                if (fb_wait_time < 0) fb_wait_time = 0;
+                if (mjz_wait_time < 0) mjz_wait_time = 0;
+            }
+
             printf("Monster HP: %d\n\n", monster_hp);
         } else {
             printf("The %s is fighting back!\n", monster_name);
@@ -218,8 +337,9 @@ void attacks(int monster_hp, int monster_attack, char monster_name[]) {
     if (hp <= 0) {
         printf("You have been defeated!\n");
     } else {
-        printf("You defeated the Slime!\n");
-        money += 1;
+        printf("You defeated the %s!\n", monster_name);
+        money += monster_reward;
+        xp += monster_xp;
     }
 
     attack_turn = 1;
@@ -228,7 +348,7 @@ void attacks(int monster_hp, int monster_attack, char monster_name[]) {
 void arena_menu() {
     int level = xp / 10; // výpočet úrovně na základě XP
 
-    printf("-- Who do you want to fight with? --\n");
+    printf("\n-- Who do you want to fight with? --\n");
     printf("1. Slime ...... 10HP [+1 Money, -1 HP]\n");
     printf("2. Skeleton ... 25HP [+3 Money, -3 HP]\n");
     printf("3. NEGR ....... 50HP [+10 Money, -8 HP]\n");
@@ -247,20 +367,20 @@ void arena_menu() {
 
     switch (choice) {
         case 1:
-            attacks(10, 3, "Slime");
+            attacks(10, 3, "Slime", 1, 2);
             break;
         case 2:
-            attacks(25, 5, "Skeleton");
+            attacks(25, 5, "Skeleton", 3, 8);
             break;
         case 3:
-            attacks(50, 15, "NEGR");
+            attacks(50, 15, "NEGR", 10, 16);
             break;
         case 4:
-            attacks(150, 10, "Martin");
+            attacks(150, 10, "Martin", 20, 32);
             break;
         case 5:
             if (level >= 10) {
-                attacks(300, 20, "Hangárová Držka");
+                attacks(300, 20, "Hangárová Držka", 50, 80);
             } else {
                 printf("5. -- You need level 10 to unlock! --\n");
             }
@@ -273,6 +393,84 @@ void arena_menu() {
     }
 }
 
+
+// Blacksmith
+
+void blacksmith_print(int level) {
+    printf("\n");
+    printf("-- Welcome to the Blacksmith --");
+    printf("\n");
+    printf("1. Bronze sword ........ 18$ [+3 Damage]");
+    printf("\n");
+    printf("2. Iron sword .......... 35$ [+8 Damage]");
+    printf("\n");
+    printf("3. Ascended sword ...... 55$ [+14 Damage]");
+    printf("\n");
+    printf("4. The beast sword ..... 180$ [+50 Damage]");
+    printf("\n");
+    if (level >= 50) {
+        printf("5. This is unfair (Rubinium sword) ..... 500$ [+400 Damage]");
+    } else if (level < 50) {
+        printf("5. -- You need level 50 to unlock this sword --");
+    }
+    printf("\n");
+}
+
+void blacksmith_menu() {
+    int level = xp / 10;
+
+    blacksmith_print(level);
+
+    printf("Your choice: ");
+    int choice;
+    scanf("%d", &choice);
+    printf("\n");
+
+    switch (choice) {
+        case 1:
+            if (money >= 18) {
+                money -= 18;
+                eq_sword = 1;
+            } else {
+                printf("You don't have enough money!");
+            }
+        case 2:
+            if (money >= 35) {
+                money -= 35;
+                eq_sword = 2;
+            } else {
+                printf("You don't have enough money!");
+            }
+        case 3:
+            if (money >= 55) {
+                money -= 55;
+                eq_sword = 3;
+            } else {
+                printf("You don't have enough money!");
+            }
+        case 4:
+            if (money >= 180) {
+                money -= 180;
+                eq_sword = 4;
+            } else {
+                printf("You don't have enough money!");
+            }
+        case 5:
+            if (level >= 50) {
+                if (money >= 500) {
+                    money -= 500;
+                    eq_sword = 5;
+                } else {
+                    printf("You don't have enough money!");
+                }
+            } else {
+                printf("Your level is too low!");
+            }
+            break;
+        default:
+            printf("Invalid choice");
+    }
+}
 
 // Game
 
@@ -298,7 +496,9 @@ int cross_menu() {
     printf("\n");
     printf("3. Go to Arena");
     printf("\n");
-    printf("4. Exit");
+    printf("4. Go to Blacksmith");
+    printf("\n");
+    printf("5. Exit");
     printf("\n\n");
 
     printf("Your choice: ");
@@ -330,10 +530,13 @@ void game(void) {
             training_menu(); // Volání tréninku
             break;
         case 3:
-            printf("Ypu chose to go to Arena");
+            printf("You chose to go to Arena");
             arena_menu();
             break;
         case 4:
+            printf("You chose go to the Blacksmith");
+            break;
+        case 5:
             printf("Thanks for playing!");
             break;
         default:
