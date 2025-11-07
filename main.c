@@ -282,14 +282,9 @@ int player_attack(int *ss_wait_time, int *fb_wait_time, int *mjz_wait_time) {
 
 void attacks(int monster_hp, int monster_attack, char monster_name[], int monster_reward, int monster_xp) {
     int attack_turn = 1;
-
     int ss_wait_time = 1;
-
     int fb_wait_time = 2;
-
     int mjz_wait_time = 4;
-
-
 
     printf("You're fighting with %s!\n", monster_name);
 
@@ -418,6 +413,15 @@ void blacksmith_print(int level) {
     printf("\n");
 }
 
+void sword_buy(int sword_cost, int sword_level) {
+    if (money >= sword_cost) {
+        money -= sword_cost;
+        eq_sword = sword_level;
+    } else {
+        printf("You don't have enough money!");
+    }
+}
+
 void blacksmith_menu() {
     int level = xp / 10;
 
@@ -430,45 +434,20 @@ void blacksmith_menu() {
 
     switch (choice) {
         case 1:
-            if (money >= 18) {
-                money -= 18;
-                eq_sword = 1;
-            } else {
-                printf("You don't have enough money!");
-            }
+            sword_buy(18, 1);
             break;
         case 2:
-            if (money >= 35) {
-                money -= 35;
-                eq_sword = 2;
-            } else {
-                printf("You don't have enough money!");
-            }
+            sword_buy(35, 2);
             break;
         case 3:
-            if (money >= 55) {
-                money -= 55;
-                eq_sword = 3;
-            } else {
-                printf("You don't have enough money!");
-            }
+            sword_buy(55, 3);
             break;
         case 4:
-            if (money >= 180) {
-                money -= 180;
-                eq_sword = 4;
-            } else {
-                printf("You don't have enough money!");
-            }
+            sword_buy(180, 4);
             break;
         case 5:
             if (level >= 50) {
-                if (money >= 500) {
-                    money -= 500;
-                    eq_sword = 5;
-                } else {
-                    printf("You don't have enough money!");
-                }
+                sword_buy(500, 5);
             } else {
                 printf("Your level is too low!");
             }
