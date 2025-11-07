@@ -22,7 +22,6 @@ void print_stats() {
     int empty_hearts = (max_hp - hp) / 10; // Počet prázdných srdíček
 
     int full_shields = shields / 10;
-    int empty_shields = (max_shields - shields) / 10;
 
     printf("\n");
     printf("Level: %d 🔮\n", level);
@@ -317,8 +316,6 @@ void attacks(int monster_hp, int monster_attack, char monster_name[], int monste
     int fb_wait_time = 2;
     int mjz_wait_time = 4;
 
-    int total_hp_sh = hp + shields;
-
     printf("You're fighting with %s!\n", monster_name);
 
     while (hp > 0 && monster_hp > 0) {
@@ -356,7 +353,13 @@ void attacks(int monster_hp, int monster_attack, char monster_name[], int monste
             printf("Monster HP: %d\n\n", monster_hp);
         } else {
             printf("The %s is fighting back!\n", monster_name);
-            total_hp_sh -= monster_attack;
+            if (monster_attack > shields) {
+                hp -= monster_attack - shields;
+                shields = 0;
+            } else {
+                shields -= monster_attack;
+            }
+
             print_stats();
         }
         attack_turn++;
@@ -395,20 +398,20 @@ void arena_menu() {
 
     switch (choice) {
         case 1:
-            attacks(10, 3, "Slime", 1, 2);
+            attacks(10, 10, "Slime", 1, 2);
             break;
         case 2:
-            attacks(25, 5, "Skeleton", 3, 8);
+            attacks(25, 20, "Skeleton", 3, 8);
             break;
         case 3:
-            attacks(50, 15, "NEGR", 10, 16);
+            attacks(50, 35, "NEGR", 10, 16);
             break;
         case 4:
-            attacks(150, 10, "Martin", 20, 32);
+            attacks(150, 25, "Martin", 20, 32);
             break;
         case 5:
             if (level >= 10) {
-                attacks(300, 20, "Hangárová Držka", 50, 80);
+                attacks(300, 40, "Hangárová Držka", 50, 80);
             } else {
                 printf("5. -- You need level 10 to unlock! --\n");
             }
