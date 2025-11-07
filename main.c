@@ -2,8 +2,12 @@
 #include <unistd.h>
 
 // Proměnné
-unsigned short max_hp = 100; // 10HP je maximum
-unsigned short hp = 100; // 10HP v Klaudiusz
+unsigned short max_hp = 100; // 100HP je maximum
+unsigned short hp = 100; // 100HP v základu 10HP = 1 srdce
+
+unsigned short max_shields = 100;
+unsigned short shields = 0; // 0 Shields v základu
+
 unsigned int money = 10; // 10 zlatých v základu
 int xp = 0; // Zkušenostní body hráče
 
@@ -13,12 +17,21 @@ int eq_sword = 0;
 // Funkce pro výpis aktuálních statistik hráče
 void print_stats() {
     int level = xp / 10;
+
     int full_hearts = hp / 10; // Počet plných srdíček
     int empty_hearts = (max_hp - hp) / 10; // Počet prázdných srdíček
 
+    int full_shields = shields / 10;
+    int empty_shields = (max_shields - shields) / 10;
+
     printf("\n");
     printf("Level: %d 🔮\n", level);
-    printf("HP: ");
+    printf("Shields: ");
+    for (int i = 0; i < full_shields; i++) {
+        printf("️🔵");
+    }
+
+    printf("\nHP: ");
 
     // Vykreslení plných životů
     for (int i = 0; i < full_hearts; i++) {
@@ -51,16 +64,26 @@ void pub_print() {
     printf("\n");
     printf("4. Chicken ....... $8 [+80 HP]");
     printf("\n");
-    printf("5. Back");
+    printf("5. Small Shield Potion ....... $4 [+20 Shields]");
+    printf("\n");
+    printf("6. Big Shield Potion ......... $12 [+60 Shields]");
+    printf("\n");
+    printf("7. Back");
     printf("\n\n");
 }
 
-void stats_add(int add_hp, int pay_money) {
+void stats_add(int add_hp, int pay_money, int add_shield) {
     // Zajištění, že HP nepřesáhne 100
-    if (hp >= 98) {
+    if (hp >= 90) {
         hp = 100;
     } else {
         hp += add_hp;
+    }
+
+    if (shields >= 98) {
+        shields = 100;
+    } else {
+        shields += add_shield;
     }
 
     money -= pay_money;
@@ -78,21 +101,29 @@ int pub_menu() {
     switch (choice) {
         case 1:
             printf("That was refreshing! [+20 HP]\n");
-            stats_add(20, 3);
+            stats_add(20, 3, 0);
             break;
         case 2:
             printf("Popici plznička! [+10 HP]\n");
-            stats_add(10, 1);
+            stats_add(10, 1, 0);
             break;
         case 3:
             printf("Amazing! [+40 HP]\n");
-            stats_add(40, 5);
+            stats_add(40, 5, 0);
             break;
         case 4:
             printf("Amazing chicken! [+80 HP]\n");
-            stats_add(80, 8);
+            stats_add(80, 8, 0);
             break;
         case 5:
+            printf("I feel stronger! [+20 Shields]\n");
+            stats_add(0, 4, 20);
+            break;
+        case 6:
+            printf("That was tasty! [+20 Shields]\n");
+            stats_add(0, 12, 60);
+            break;
+        case 7:
             printf("Leaving the pub!\n");
             break;
         default:
@@ -286,6 +317,8 @@ void attacks(int monster_hp, int monster_attack, char monster_name[], int monste
     int fb_wait_time = 2;
     int mjz_wait_time = 4;
 
+    int total_hp_sh = hp + shields;
+
     printf("You're fighting with %s!\n", monster_name);
 
     while (hp > 0 && monster_hp > 0) {
@@ -323,7 +356,7 @@ void attacks(int monster_hp, int monster_attack, char monster_name[], int monste
             printf("Monster HP: %d\n\n", monster_hp);
         } else {
             printf("The %s is fighting back!\n", monster_name);
-            hp -= monster_attack;
+            total_hp_sh -= monster_attack;
             print_stats();
         }
         attack_turn++;
