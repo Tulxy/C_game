@@ -4,12 +4,12 @@
 // Maximální počet životů hráče
 unsigned short max_hp = 10; // 10HP je maximum
 // Aktuální počet životů hráče
-unsigned short hp = 10; // 10HP v základu
+unsigned short hp = 5; // 10HP v základu
 
 // Množství peněz hráče
 unsigned int money = 10; // 10 zlatých v základu
 // Zkušenostní body hráče
-unsigned int xp = 0;
+int xp = 0;
 
 // Funkce pro výpis aktuálních statistik hráče
 void print_stats() {
@@ -50,6 +50,18 @@ void pub_print() {
     printf("\n\n");
 }
 
+void stats_add(int add_hp, int pay_money) {
+    // Zajištění, že HP nepřesáhne 100
+    if (hp >= 98) {
+        hp = 100;
+    } else {
+        hp += add_hp;
+    }
+
+    money -= pay_money;
+}
+
+
 // Obsluha menu hospody, aktualizuje HP a peníze podle volby
 int pub_menu() {
     pub_print();
@@ -62,40 +74,19 @@ int pub_menu() {
     switch (choice) {
         case 1:
             printf("That was refreshing! [+2 HP]\n");
-            // Zajištění, že HP nepřesáhne 100
-            if (hp >= 98) {
-                hp = 100;
-            } else {
-                hp += 2;
-            }
-            money -= 3;
+            stats_add(2, 3);
             break;
         case 2:
             printf("Popici plznička! [+1 HP]\n");
-            if (hp >= 99) {
-                hp = 100;
-            } else {
-                hp += 1;
-            }
-            money -= 1;
+            stats_add(1, 1);
             break;
         case 3:
             printf("Amazing! [+4 HP]\n");
-            if (hp >= 96) {
-                hp = 100;
-            } else {
-                hp += 4;
-            }
-            money -= 5;
+            stats_add(4, 5);
             break;
         case 4:
-            printf("Amazing chiken!\n");
-            if (hp >= 90) {
-                hp = 100;
-            } else {
-                hp += 10;
-            }
-            money -= 8;
+            printf("Amazing chiken! [+10 HP]\n");
+            stats_add(10, 8);
             break;
         case 5:
             printf("Leaving th pub!\n");
@@ -151,7 +142,7 @@ void training_print() {
 }
 
 // Obsluha menu tréninkového tábora, volá odpočty a přidává XP
-int training_menu() {
+void training_menu() {
     training_print();
 
     printf("Your choice: ");
@@ -234,7 +225,7 @@ int cross_menu() {
 // Hlavní funkce programu
 int main(void) {
     welcome(); // Zobrazení uvítání
-    game();    // Spuštění hry
+    game(); // Spuštění hry
 
     return 0;
 }
@@ -246,7 +237,7 @@ void game(void) {
     switch (choice) {
         case 1:
             printf("You chose to go to pub");
-            pub_menu();  // Volání hospody
+            pub_menu(); // Volání hospody
             break;
         case 2:
             printf("You chose go to Training Camp");
@@ -261,8 +252,8 @@ void game(void) {
         default:
             printf("Invalid choice");
     }
-
     print_stats(); // Výpis statistik po akci
+
 
     // Pokud hráč nevybral ukončení, hra pokračuje rekurzivně
     if (choice != 4) {
