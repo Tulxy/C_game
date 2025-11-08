@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <time.h>
 
 // Proměnné
 unsigned short max_hp = 100; // 100HP je maximum
@@ -310,11 +312,12 @@ int player_attack(int *ss_wait_time, int *fb_wait_time, int *mjz_wait_time) {
     return 0;
 }
 
-void attacks(int monster_hp, int monster_attack, char monster_name[], int monster_reward, int monster_xp) {
+void attacks(int monster_hp, int min, int max , char monster_name[], int monster_reward, int monster_xp) {
     int attack_turn = 1;
     int ss_wait_time = 1;
     int fb_wait_time = 2;
     int mjz_wait_time = 4;
+    int monster_attack = rand() % (max - min + 1) + min;
 
     printf("You're fighting with %s!\n", monster_name);
 
@@ -398,20 +401,20 @@ void arena_menu() {
 
     switch (choice) {
         case 1:
-            attacks(10, 10, "Slime", 1, 2);
+            attacks(10, 5, 15, "Slime", 1, 2);
             break;
         case 2:
-            attacks(25, 20, "Skeleton", 3, 8);
+            attacks(25, 10, 35, "Skeleton", 3, 8);
             break;
         case 3:
-            attacks(50, 35, "NEGR", 10, 16);
+            attacks(50, 20, 40 ,"NEGR", 10, 16);
             break;
         case 4:
-            attacks(150, 25, "Martin", 20, 32);
+            attacks(150, 15, 35, "Martin", 20, 32);
             break;
         case 5:
             if (level >= 10) {
-                attacks(300, 40, "Hangárová Držka", 50, 80);
+                attacks(300, 30, 60, "Hangárová Držka", 50, 80);
             } else {
                 printf("5. -- You need level 10 to unlock! --\n");
             }
@@ -534,6 +537,7 @@ int cross_menu() {
 
 // Hlavní funkce programu
 int main(void) {
+    srand(time(NULL));
     welcome(); // Zobrazení uvítání
     game(); // Spuštění hry
 
