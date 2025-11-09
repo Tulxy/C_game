@@ -3,34 +3,32 @@
 #include <stdlib.h>
 #include <time.h>
 
-// Proměnné
-unsigned short max_hp = 100; // 100HP je maximum
-unsigned short hp = 100; // 100HP v základu 10HP = 1 srdce
+// ==========================================
+//          Hlavní proměnné hry
+// ==========================================
 
-unsigned short max_shields = 100;
-unsigned short shields = 0; // 0 Shields v základu
+unsigned short max_hp = 100; // Maximální počet životů, které hráč může mít
+unsigned short hp = 100; // Aktuální počet životů hráče (10HP = 1 srdce)
 
-unsigned int money = 10; // 10 zlatých v základu
-int xp = 0; // Zkušenostní body hráče
+unsigned short max_shields = 100; // Maximální kapacita štítů
+unsigned short shields = 0; // Aktuální hodnota štítů hráče
 
-int eq_sword = 0;
+unsigned short max_armour = 100; // Maximální hodnota brnění
+unsigned short armour = 0; // Aktuální hodnota brnění hráče
+
+unsigned int money = 10; // Počáteční množství peněz hráče
+int xp; // Aktuální množství zkušenostních bodů (XP) hráče
+
+int eq_sword = 0; // Úroveň nebo typ meče, který má hráč vybavený
+int eq_armour = 0; // Úroveň nebo typ brnění, které má hráč vybavené
 
 
 // Funkce pro výpis aktuálních statistik hráče
-void print_stats() {
-    int level = xp / 10;
 
+// Funkce pro zobrazení aktuálních životů hráče jako srdíčka
+void print_hp() {
     int full_hearts = hp / 10; // Počet plných srdíček
     int empty_hearts = (max_hp - hp) / 10; // Počet prázdných srdíček
-
-    int full_shields = shields / 10;
-
-    printf("\n");
-    printf("Level: %d 🔮\n", level);
-    printf("Shields: ");
-    for (int i = 0; i < full_shields; i++) {
-        printf("️🔵");
-    }
 
     printf("\nHP: ");
 
@@ -48,8 +46,72 @@ void print_stats() {
     printf("Money: %d 💵\n", money);
 }
 
+// Funkce pro zobrazení aktuálních štítů hráče jako srdíčka
+void print_shields() {
+    int full_shields = shields / 10;
+    int empty_shields = (max_shields - shields) / 10;
 
-// Pub functions
+    printf("\nShields: ");
+
+    for (int i = 0; i < full_shields; i++) {
+        printf("💙");
+    }
+    for (int i = 0; i < empty_shields; i++) {
+        printf("🩶");
+    }
+    printf(" (%d/%d)\n", shields, max_shields); // zobrazí číselně Shields
+}
+
+// Funkce pro zobrazení aktuálního brnění hráče jako zámky
+void print_armour() {
+    int full_armour = armour / 10;
+
+    // Vykreslení brnění
+    printf("\nArmour: ");
+
+    for (int i = 0; i < full_armour; i++) {
+        printf("🔒");
+    }
+
+    printf(" (%d/%d)\n", armour, max_armour); // zobrazí číselně Armour
+}
+
+// Funkce pro vypsání všech statistik hráče (úroveň, štíty, brnění, HP, peníze)
+void print_stats() {
+    int level = xp / 10;
+
+    printf("\n");
+    printf("Level: %d 🔮\n", level);
+
+    print_shields();
+    print_armour();
+    print_hp();
+}
+
+// Funkce pro nastavení hodnoty brnění podle úrovně vybaveného brnění
+void set_shields() {
+    switch (eq_armour) {
+        case 1:
+            armour += 10;
+            break;
+        case 2:
+            armour += 25;
+            break;
+        case 3:
+            armour += 46;
+            break;
+        case 4:
+            armour += 100;
+            break;
+        default:
+            armour += 0;
+    }
+}
+
+
+// =========================
+//      Hospoda (Pub)
+// =========================
 
 // Výpis nabídky hospody
 void pub_print() {
@@ -73,7 +135,9 @@ void pub_print() {
     printf("\n\n");
 }
 
+// Funkce pro přidání HP, odečtení peněz a přidání štítů po nákupu v hospodě
 void stats_add(int add_hp, int pay_money, int add_shield) {
+    // Ošetření maximální hodnoty HP a štítů
     // Zajištění, že HP nepřesáhne 100
     if (hp >= 90) {
         hp = 100;
@@ -90,7 +154,7 @@ void stats_add(int add_hp, int pay_money, int add_shield) {
     money -= pay_money;
 }
 
-// Obsluha menu hospody, aktualizuje HP a peníze podle volby
+// Funkce pro obsluhu menu hospody, zpracuje volbu a upraví statistiky
 int pub_menu() {
     pub_print();
 
@@ -99,6 +163,7 @@ int pub_menu() {
     scanf("%d", &choice);
     printf("\n");
 
+    // Zpracování volby uživatele v hospodě
     switch (choice) {
         case 1:
             printf("That was refreshing! [+20 HP]\n");
@@ -135,9 +200,11 @@ int pub_menu() {
 }
 
 
-// Training Camp functions
+// =========================
+//    Tréninkový tábor
+// =========================
 
-// Odpočet času tréninku s vizuálním zobrazením a přidáním XP
+// Funkce pro odpočet času tréninku, zobrazení průběhu a přidání XP
 void count_down(int time, int add_xp) {
     printf("Training ends in: ");
     for (int i = time; i > 0; i--) {
@@ -154,7 +221,7 @@ void count_down(int time, int add_xp) {
     }
 }
 
-// Výpis nabídky tréninkového tábora
+// Funkce pro vypsání nabídky tréninkového tábora
 void training_print() {
     int level = xp / 10;
 
@@ -180,7 +247,7 @@ void training_print() {
     printf("\n\n");
 }
 
-// Obsluha menu tréninkového tábora, volá odpočty a přidává XP
+// Funkce pro obsluhu menu tréninkového tábora, volá odpočty a přidává XP
 void training_menu() {
     training_print();
 
@@ -189,6 +256,7 @@ void training_menu() {
     scanf("%d", &choice);
     printf("\n");
 
+    // Zpracování volby uživatele v tréninkovém táboře
     switch (choice) {
         case 1:
             count_down(10, 5);
@@ -230,41 +298,50 @@ void training_menu() {
 }
 
 
-// Arena functions
+// =========================
+//         Aréna
+// =========================
 
+// Funkce pro zobrazení nabídky útoků hráče v aréně podle úrovně
+void attack_print() {
+    int level = xp / 10;
+
+    printf("1. Punch .......... [Damage 4HP]\n");
+    printf("2. Sword Slash .... [Damage 10HP]\n");
+    printf("3. Fireball ....... [Damage 30HP]\n");
+    printf("4. Mrd jak zmrd ... [Damage 60HP]\n");
+    if (level >= 5) {
+        printf("5. Ultimate Sword Slash ... [Damage 75HP]\n");
+    } else if (level < 5) {
+        printf("5. -- You need level 5 to unlock! --\n");
+    }
+
+    if (level >= 10) {
+        printf("6. Arcane Spell ... [Damage 95HP]\n");
+    } else if (level < 10) {
+        printf("6. -- You need level 10 to unlock! --\n");
+    }
+
+    if (level >= 35) {
+        printf("7. Destroyer punch ... [Damage 150HP]\n");
+    } else if (level < 35) {
+        printf("7. -- You need level 35 to unlock! --\n");
+    }
+}
+
+// Funkce pro volbu útoku hráče v aréně, řeší cooldowny a vrací sílu útoku
 int player_attack(int *ss_wait_time, int *fb_wait_time, int *mjz_wait_time) {
     int punch = 4;
     int sword_slash = 10;
     int fireball = 30;
     int mrd_jak_zmrd = 60;
 
-    int level = xp / 10;
-
     int attack_choice = 0;
     int valid_choice = 0;
 
+    // Smyčka dokud hráč nevybere platný útok (nebo cooldown)
     while (!valid_choice) {
-        printf("1. Punch .......... [Damage 4HP]\n");
-        printf("2. Sword Slash .... [Damage 10HP]\n");
-        printf("3. Fireball ....... [Damage 30HP]\n");
-        printf("4. Mrd jak zmrd ... [Damage 60HP]\n");
-        if (level >= 5) {
-            printf("5. Ultimate Sword Slash ... [Damage 75HP]\n");
-        } else if (level < 5) {
-            printf("5. -- You need level 5 to unlock! --\n");
-        }
-
-        if (level >= 10) {
-            printf("6. Arcane Spell ... [Damage 95HP]\n");
-        } else if (level < 10) {
-            printf("6. -- You need level 10 to unlock! --\n");
-        }
-
-        if (level >= 35) {
-            printf("7. Destroyer punch ... [Damage 150HP]\n");
-        } else if (level < 35) {
-            printf("7. -- You need level 35 to unlock! --\n");
-        }
+        attack_print();
 
         printf("Your choice: ");
         scanf("%d", &attack_choice);
@@ -308,11 +385,10 @@ int player_attack(int *ss_wait_time, int *fb_wait_time, int *mjz_wait_time) {
                 printf("Invalid choice!\n\n");
         }
     }
-
-    return 0;
 }
 
-void attacks(int monster_hp, int min, int max , char monster_name[], int monster_reward, int monster_xp) {
+// Funkce pro průběh souboje s monstrem v aréně
+void attacks(int monster_hp, int min, int max, char monster_name[], int monster_reward, int monster_xp) {
     int attack_turn = 1;
     int ss_wait_time = 1;
     int fb_wait_time = 2;
@@ -321,11 +397,14 @@ void attacks(int monster_hp, int min, int max , char monster_name[], int monster
 
     printf("You're fighting with %s!\n", monster_name);
 
+    // Hlavní smyčka souboje: střídání hráč/monstrum, dokud někdo nepadne
     while (hp > 0 && monster_hp > 0) {
         if (attack_turn % 2 == 1) {
+            // Hráč útočí
             printf("Your turn, Attack!\n");
 
             int damage = player_attack(&ss_wait_time, &fb_wait_time, &mjz_wait_time);
+            // Přičtení bonusového poškození podle meče
             switch (eq_sword) {
                 case 1:
                     damage += 3;
@@ -342,9 +421,12 @@ void attacks(int monster_hp, int min, int max , char monster_name[], int monster
                 case 5:
                     damage += 400;
                     break;
+                default:
+                    damage += 0;
             }
             if (damage > 0) {
                 monster_hp -= damage;
+                // Snížení cooldownů útoků
                 ss_wait_time -= 1;
                 fb_wait_time -= 1;
                 mjz_wait_time -= 1;
@@ -355,30 +437,42 @@ void attacks(int monster_hp, int min, int max , char monster_name[], int monster
 
             printf("Monster HP: %d\n\n", monster_hp);
         } else {
+            // Monstrum útočí na hráče
             printf("The %s is fighting back!\n", monster_name);
             if (monster_attack > shields) {
-                hp -= monster_attack - shields;
+                // Poškození projde skrz štíty
+                int remaining_damage = monster_attack - shields;
                 shields = 0;
+
+                if (remaining_damage > armour) {
+                    // Brnění pohltí část poškození
+                    hp -= remaining_damage - armour;
+                    armour = 0;
+                } else {
+                    // Brnění pohltí vše
+                    armour -= remaining_damage;
+                }
             } else {
+                // Štíty pohltí vše
                 shields -= monster_attack;
             }
-
             print_stats();
         }
         attack_turn++;
     }
 
+    // Vyhodnocení výsledku souboje
     if (hp <= 0) {
         printf("You have been defeated!\n");
     } else {
         printf("You defeated the %s!\n", monster_name);
+        // Odměna za výhru
         money += monster_reward;
         xp += monster_xp;
     }
-
-    attack_turn = 1;
 }
 
+// Funkce pro zobrazení a zpracování menu arény (výběr soupeře)
 void arena_menu() {
     int level = xp / 10; // výpočet úrovně na základě XP
 
@@ -399,6 +493,7 @@ void arena_menu() {
     scanf("%d", &choice);
     printf("\n");
 
+    // Zpracování volby soupeře v aréně
     switch (choice) {
         case 1:
             attacks(10, 5, 15, "Slime", 1, 2);
@@ -407,7 +502,7 @@ void arena_menu() {
             attacks(25, 10, 35, "Skeleton", 3, 8);
             break;
         case 3:
-            attacks(50, 20, 40 ,"NEGR", 10, 16);
+            attacks(50, 20, 40, "NEGR", 10, 16);
             break;
         case 4:
             attacks(150, 15, 35, "Martin", 20, 32);
@@ -428,30 +523,38 @@ void arena_menu() {
 }
 
 
-// Blacksmith
+// =========================
+//        Kovář (Blacksmith)
+// =========================
 
+// Funkce pro vypsání nabídky zbraní a brnění u kováře
 void blacksmith_print(int level) {
     printf("\n");
-    printf("-- Welcome to the Blacksmith --");
-    printf("\n");
-    printf("1. Bronze sword ........ 18$ [+3 Damage]");
-    printf("\n");
-    printf("2. Iron sword .......... 35$ [+8 Damage]");
-    printf("\n");
-    printf("3. Ascended sword ...... 55$ [+14 Damage]");
-    printf("\n");
-    printf("4. The beast sword ..... 180$ [+50 Damage]");
-    printf("\n");
+    printf("-- Welcome to the Blacksmith --\n");
+    printf("-- Swords --\n");
+    printf("1. Bronze sword ........ 18$ [+3 Damage]\n");
+    printf("2. Iron sword .......... 35$ [+8 Damage]\n");
+    printf("3. Ascended sword ...... 55$ [+14 Damage]\n");
+    printf("4. The beast sword ..... 180$ [+50 Damage]\n");
     if (level >= 50) {
-        printf("5. This is unfair (Rubinium sword) ..... 500$ [+400 Damage]");
+        printf("5. This is unfair (Rubinium sword) ..... 500$ [+400 Damage]\n");
     } else if (level < 50) {
-        printf("5. -- You need level 50 to unlock this sword --");
+        printf("5. -- You need level 50 to unlock this sword --\n");
     }
-    printf("\n");
-    printf("6. Exit");
+    printf("-- Armour --\n");
+    printf("6. Bronze armour ..... 12$ [+10 Armour]\n");
+    printf("7. Iron armour ....... 28$ [+25 Armour]\n");
+    printf("8. Diamond armour .... 50$ [+46 Armour]\n");
+    if (level >= 25) {
+        printf("9. Awakened armour ... 150$ [+100HP]\n");
+    } else if (level < 25) {
+        printf("9. -- You need level 25 to unlock this sword --\n");
+    }
+    printf("10. Exit\n");
     printf("\n");
 }
 
+// Funkce pro nákup meče
 void sword_buy(int sword_cost, int sword_level) {
     if (money >= sword_cost) {
         money -= sword_cost;
@@ -461,6 +564,18 @@ void sword_buy(int sword_cost, int sword_level) {
     }
 }
 
+// Funkce pro nákup brnění
+void armour_buy(int armour_cost, int armour_level) {
+    if (money >= armour_cost) {
+        money -= armour_cost;
+        eq_armour = armour_level;
+        set_shields();
+    } else {
+        printf("You don't have enough money!");
+    }
+}
+
+// Funkce pro zobrazení a zpracování menu u kováře
 void blacksmith_menu() {
     int level = xp / 10;
 
@@ -471,6 +586,7 @@ void blacksmith_menu() {
     scanf("%d", &choice);
     printf("\n");
 
+    // Zpracování volby nákupu u kováře
     switch (choice) {
         case 1:
             sword_buy(18, 1);
@@ -491,7 +607,21 @@ void blacksmith_menu() {
                 printf("Your level is too low!");
             }
             break;
+
+        // Armours
         case 6:
+            armour_buy(12, 1);
+            break;
+        case 7:
+            armour_buy(28, 2);
+            break;
+        case 8:
+            armour_buy(50, 3);
+            break;
+        case 9:
+            armour_buy(150, 4);
+            break;
+        case 10:
             printf("Goodbye.");
             break;
         default:
@@ -499,12 +629,15 @@ void blacksmith_menu() {
     }
 }
 
-// Game
+
+// =========================
+//          Hra
+// =========================
 
 // Prototyp funkce hry pro rekurzivní volání
 void game();
 
-// Úvodní obrazovka hry
+// Funkce pro úvodní obrazovku hry
 void welcome() {
     printf("Welcome to the world of C game!");
     printf("\n");
@@ -513,7 +646,7 @@ void welcome() {
     printf("\n");
 }
 
-// Výpis hlavního menu (křižovatka)
+// Funkce pro vypsání hlavního menu (křižovatka)
 int cross_menu() {
     printf("Cross: ");
     printf("\n");
@@ -535,7 +668,7 @@ int cross_menu() {
     return choice;
 }
 
-// Hlavní funkce programu
+// Hlavní funkce programu, inicializuje hru
 int main(void) {
     srand(time(NULL));
     welcome(); // Zobrazení uvítání
@@ -544,10 +677,11 @@ int main(void) {
     return 0;
 }
 
-// Hlavní herní smyčka, která volí lokaci podle uživatele
+// Hlavní herní smyčka, která zpracovává volbu lokace a volá příslušné funkce
 void game(void) {
     int choice = cross_menu();
 
+    // Zpracování volby lokace hráče
     switch (choice) {
         case 1:
             printf("You chose to go to pub");
@@ -572,7 +706,6 @@ void game(void) {
             printf("Invalid choice");
     }
     print_stats(); // Výpis statistik po akci
-
 
     // Pokud hráč nevybral ukončení, hra pokračuje rekurzivně
     if (choice != 5) {
