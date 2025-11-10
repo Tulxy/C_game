@@ -2,6 +2,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>  // needed for strcmp
+
 
 // ==========================================
 //          Hlavní proměnné hry
@@ -19,11 +21,25 @@ int armour = 0; // Aktuální hodnota brnění hráče
 int max_stamina = 100;
 int stamina = 100;
 
-unsigned int money = 20; // Počáteční množství peněz hráče
-int xp = 0; // Aktuální množství zkušenostních bodů (XP) hráče
+unsigned int money = 100; // Počáteční množství peněz hráče
+int xp = 300; // Aktuální množství zkušenostních bodů (XP) hráče
 
 int eq_sword = 0; // Úroveň nebo typ meče, který má hráč vybavený
 int eq_armour = 0; // Úroveň nebo typ brnění, které má hráč vybavené
+
+const int sword_bonus[] = {0, 3, 8, 14, 50, 400};
+
+
+// Quest variables
+
+int slime_kills = 0;
+int skeleton_kills = 0;
+int NEGR_kills = 0;
+int Martin_kills = 0;
+int Mira_kills = 0;
+
+int time_trained = 0;
+
 
 // Funkce pro výpis aktuálních statistik hráče
 
@@ -118,6 +134,83 @@ void set_armour() {
             break;
         default:
             armour += 0;
+    }
+}
+
+
+// ====================
+// Quests
+// ====================
+
+
+void complete_quest(int quest_number) {
+    switch (quest_number) {
+        case 1: // Kill 5 Slimes
+            if (slime_kills >= 5) {
+                printf("Quest completed: Kill 5 Slimes! [+30 XP, +12 Money]\n");
+                xp += 30;
+                money += 12;
+                slime_kills = 0; // Reset counter to prevent repeating reward
+            } else {
+                printf("Quest not completed yet! Slimes killed: %d/5\n", slime_kills);
+            }
+            break;
+        case 2: // Train for 2 minutes
+            if (time_trained >= 120) {
+                printf("Quest completed: Train for 2 minutes! [+40 XP, +20 Money]\n");
+                xp += 40;
+                money += 20;
+                time_trained = 0; // Reset counter
+            } else {
+                printf("Quest not completed yet! Time trained: %d/120 seconds\n", time_trained);
+            }
+            break;
+        case 3: // Kill Mira the Devourer
+            if (Mira_kills >= 1) {
+                printf("Quest completed: Kill Mira the Devourer! [+200 XP, +120 Money]\n");
+                xp += 200;
+                money += 120;
+                Mira_kills = 0; // Reset counter
+            } else {
+                printf("Quest not completed yet!\n");
+            }
+            break;
+        default:
+            printf("Invalid quest number!\n");
+    }
+}
+
+void quests_menu() {
+    printf("\n-- The Questboard --");
+    printf("Complete quests to earn XP and Money.\n");
+
+    if (slime_kills >= 5) {
+        printf("1. Kill 5 Slimes ... [Ready to claim!]\n");
+    } else {
+        printf("1. Kill 5 Slimes ... [Progress: %d/5]\n", slime_kills);
+    }
+
+    if (time_trained >= 120) {
+        printf("2. Train for 2 Minutes ... [Ready to claim!]\n");
+    } else {
+        printf("2. Train for 2 Minutes ... [Progress: %d/120 seconds]\n", time_trained);
+    }
+
+    if (Mira_kills >= 1) {
+        printf("3. Kill Mira the Devourer ... [Ready to claim!]\n");
+    } else {
+        printf("3. Kill Mira the Devourer ... [Not done]\n");
+    }
+
+    printf("4. Back\n");
+    printf("Choose a quest to claim reward: ");
+    int choice;
+    scanf("%d", &choice);
+
+    if (choice >= 1 && choice <= 3) {
+        complete_quest(choice);
+    } else {
+        printf("Returning...\n");
     }
 }
 
@@ -236,11 +329,13 @@ void count_down(int time, int add_xp) {
         printf("\r%02d:%02d  ", min, sec);
         fflush(stdout);
         sleep(1);
+        time_trained++;
     }
     printf("Nice training!\n");
     if (add_xp > 0) {
         printf("+%d XP\n", add_xp);
         xp += add_xp;
+        complete_quest(2);
     }
 }
 
@@ -309,8 +404,9 @@ void training_menu() {
                 printf("\r%02d:%02d  ", min, sec);
                 fflush(stdout);
                 sleep(1);
+                time_trained++;
             }
-
+            complete_quest(2);
             xp += time * 0.5;
 
             printf("\nNice training!\n");
@@ -371,6 +467,16 @@ void attack_print() {
     }
 }
 
+int use_stamina(int cost) {
+    if (stamina < cost) {
+        printf("⚠️ Not enough stamina! (%d/%d)\n", stamina, max_stamina);
+        return 0;
+    }
+    stamina -= cost;
+    printf("Stamina left: %d/%d\n", stamina, max_stamina);
+    return 1;
+}
+
 // Funkce pro volbu útoku hráče v aréně, řeší cooldowny a vrací sílu útoku
 int player_attack(const int *p_stamina, const int *ss_stamina, const int *fb_stamina,
                   const int *mjz_stamina, const int *ultss_stamina, const int *as_stamina, const int *dp_stamina) {
@@ -390,86 +496,38 @@ int player_attack(const int *p_stamina, const int *ss_stamina, const int *fb_sta
         printf("\n");
 
         switch (attack_choice) {
-            case 1: {
-                int punch = 4;
-                if (stamina >= *p_stamina) {
-                    stamina -= *p_stamina;
-                } else {
-                    printf("You don’t have enough stamina!\n");
-                    return 0;
-                }
-                return punch + damage_bonus;
-            }
-            case 2: {
-                int sword_slash = 10;
-                if (stamina >= *ss_stamina) {
-                    stamina -= *ss_stamina;
-                } else {
-                    printf("You don’t have enough stamina!\n");
-                    return 0;
-                }
-                return sword_slash + damage_bonus;
-            }
-            case 3: {
-                int fireball = 30;
-                if (stamina >= *fb_stamina) {
-                    stamina -= *fb_stamina;
-                } else {
-                    printf("You don’t have enough stamina!\n");
-                    return 0;
-                }
-                return fireball + damage_bonus;
-            }
-            case 4: {
-                int mrd_jak_zmrd = 60;
-                if (stamina >= *mjz_stamina) {
-                    stamina -= *mjz_stamina;
-                } else {
-                    printf("You don’t have enough stamina!\n");
-                    return 0;
-                }
-                return mrd_jak_zmrd + damage_bonus;
-            }
-            case 5: {
-                int ult_sword_slash = 100;
-                if (stamina >= *ultss_stamina) {
-                    stamina -= *ultss_stamina;
-                } else {
-                    printf("You don’t have enough stamina!\n");
-                    return 0;
-                }
-                return ult_sword_slash + damage_bonus;
-            }
-            case 6: {
-                int arcane_spell = 145;
-                if (stamina >= *as_stamina) {
-                    stamina -= *as_stamina;
-                } else {
-                    printf("You don’t have enough stamina!\n");
-                    return 0;
-                }
-                return arcane_spell + damage_bonus;
-            }
-            case 7: {
-                int destroyer_punch = 350;
-                if (stamina >= *dp_stamina) {
-                    stamina -= *dp_stamina;
-                } else {
-                    printf("You don’t have enough stamina!\n");
-                    return 0;
-                }
-                return destroyer_punch + damage_bonus;
-            }
+            case 1:
+                if (use_stamina(5)) return 4 + damage_bonus;
+                break;
+            case 2:
+                if (level >= 3 && use_stamina(10)) return 10 + damage_bonus;
+                break;
+            case 3:
+                if (level >= 8 && use_stamina(20)) return 30 + damage_bonus;
+                break;
+            case 4:
+                if (level >= 10 && use_stamina(40)) return 60 + damage_bonus;
+                break;
+            case 5:
+                if (level >= 15 && use_stamina(50)) return 100 + damage_bonus;
+                break;
+            case 6:
+                if (level >= 20 && use_stamina(60)) return 145 + damage_bonus;
+                break;
+            case 7:
+                if (level >= 35 && use_stamina(80)) return 350 + damage_bonus;
+                break;
             default:
                 printf("Invalid choice!\n\n");
+                break;
         }
-        stamina += 10;
     }
 }
 
 // Funkce pro průběh souboje s monstrem v aréně
 void attacks(int monster_hp, int min, int max, char monster_name[], int monster_reward, int monster_xp) {
     int attack_turn = 1;
+
     int p_stamina = 5;
     int ss_stamina = 10;
     int fb_stamina = 20;
@@ -478,6 +536,7 @@ void attacks(int monster_hp, int min, int max, char monster_name[], int monster_
     int as_stamina = 60;
     int dp_stamina = 80;
 
+    int level = xp / 10;
     int monster_attack = rand() % (max - min + 1) + min;
 
     printf("You're fighting with %s!\n", monster_name);
@@ -490,25 +549,31 @@ void attacks(int monster_hp, int min, int max, char monster_name[], int monster_
 
             int damage = player_attack(&p_stamina, &ss_stamina, &fb_stamina, &mjz_stamina, &ultss_stamina, &as_stamina,
                                        &dp_stamina);
+
+            if (rand() % 100 < 10) { // 10% šance
+                printf("Critical hit! 💥\n");
+                damage *= 2;
+                printf("critical damage");
+            }
             // Přičtení bonusového poškození podle meče
             switch (eq_sword) {
                 case 1:
-                    damage += 3;
+                    damage += sword_bonus[eq_sword];
                     break;
                 case 2:
-                    damage += 8;
+                    damage += sword_bonus[eq_sword];
                     break;
                 case 3:
-                    damage += 14;
+                    damage += sword_bonus[eq_sword];
                     break;
                 case 4:
-                    damage += 50;
+                    damage += sword_bonus[eq_sword];
                     break;
                 case 5:
-                    damage += 400;
+                    damage += sword_bonus[eq_sword];
                     break;
                 default:
-                    damage += 0;
+                    damage += sword_bonus[eq_sword];
             }
             if (damage > 0) {
                 monster_hp -= damage;
@@ -518,6 +583,7 @@ void attacks(int monster_hp, int min, int max, char monster_name[], int monster_
         } else {
             // Monstrum útočí na hráče
             printf("The %s is fighting back!\n", monster_name);
+
             if (monster_attack > shields) {
                 // Poškození projde skrz štíty
                 int remaining_damage = monster_attack - shields;
@@ -539,19 +605,54 @@ void attacks(int monster_hp, int min, int max, char monster_name[], int monster_
             if (hp < 0) hp = 0;
             print_stats();
         }
+
+        // Regenerate small amount of stamina only when it's the monster's turn
+        if (attack_turn % 2 == 0) {
+            if (level >= 3 && level < 5) {
+                stamina += 10;
+            } else if (level >= 5 && level < 10) {
+                stamina += 15;
+            } else if (level >= 10 && level < 15) {
+                stamina += 20;
+            } else if (level >= 15 && level < 20) {
+                stamina += 40;
+            }
+            if (stamina > max_stamina) stamina = max_stamina;
+        }
+
         attack_turn++;
     }
 
     // Vyhodnocení výsledku souboje
     if (hp <= 0) {
         printf("You have been defeated!\n");
+        printf("Final stats: \n");
+        print_stats();
     } else {
         printf("You defeated the %s!\n", monster_name);
-        // Odměna za výhru
         money += monster_reward;
         xp += monster_xp;
+
+        // restore only part of stamina after fight
         stamina = 100;
+        if (stamina > max_stamina) stamina = max_stamina;
     }
+
+    // Add to kill counts
+    if (strcmp(monster_name, "Slime") == 0) {
+        slime_kills++;
+        complete_quest(1); // check Slime quest
+    } else if (strcmp(monster_name, "Skeleton") == 0) {
+        skeleton_kills++;
+    } else if (strcmp(monster_name, "NEGR") == 0) {
+        NEGR_kills++;
+    } else if (strcmp(monster_name, "Martin") == 0) {
+        Martin_kills++;
+    } else if (strcmp(monster_name, "Mira") == 0) {
+        Mira_kills++;
+        complete_quest(3); // check Mira quest
+    }
+
 }
 
 // Funkce pro zobrazení a zpracování menu arény (výběr soupeře)
@@ -641,10 +742,31 @@ void blacksmith_print(int level) {
     printf("\n");
     printf("-- Welcome to the Blacksmith -- [%d] \n", money);
     printf("-- Swords --\n");
-    printf("1. Bronze sword ........ 18$ [+3 Damage]\n");
-    printf("2. Iron sword .......... 35$ [+8 Damage]\n");
-    printf("3. Ascended sword ...... 55$ [+14 Damage]\n");
-    printf("4. The beast sword ..... 180$ [+50 Damage]\n");
+
+    if (eq_sword >= 1) {
+        printf("-- Already bought --\n");
+    } else {
+        printf("1. Bronze sword ........ 18$ [+3 Damage]\n");
+    }
+
+    if (eq_sword >= 2) {
+        printf("-- Already bought --\n");
+    } else {
+        printf("2. Iron sword .......... 35$ [+8 Damage]\n");
+    }
+
+    if (eq_sword >= 3) {
+        printf("-- Already bought --\n");
+    } else {
+        printf("3. Ascended sword ...... 55$ [+14 Damage]\n");
+    }
+
+    if (eq_sword >= 4) {
+        printf("-- Already bought --\n");
+    } else {
+        printf("4. The beast sword ..... 180$ [+50 Damage]\n");
+    }
+
     if (level >= 50) {
         printf("5. This is unfair (Rubinium sword) ..... 500$ [+400 Damage]\n");
     } else {
@@ -660,7 +782,7 @@ void blacksmith_print(int level) {
         printf("9. -- You need level 25 to unlock this sword --\n");
     }
     printf("-- Armour Repair --\n");
-    printf("10. Repair ........ [8$, 16$, 32$, 64$]");
+    printf("10. Repair ........ [4$, 8$, 12$, 16$]");
 
     printf("\n11. back");
     printf("\n");
@@ -802,7 +924,9 @@ int cross_menu() {
     printf("\n");
     printf("4. Go to Blacksmith");
     printf("\n");
-    printf("5. Exit");
+    printf("5. Go to Questboard");
+    printf("\n");
+    printf("6. Exit");
     printf("\n\n");
 
     printf("Your choice: ");
@@ -823,36 +947,18 @@ int main(void) {
 
 // Hlavní herní smyčka, která zpracovává volbu lokace a volá příslušné funkce
 void game(void) {
-    int choice = cross_menu();
-
-    // Zpracování volby lokace hráče
-    switch (choice) {
-        case 1:
-            printf("You chose to go to pub");
-            pub_menu(); // Volání hospody
-            break;
-        case 2:
-            printf("You chose go to Training Camp");
-            training_menu(); // Volání tréninku
-            break;
-        case 3:
-            printf("You chose to go to Arena");
-            arena_menu();
-            break;
-        case 4:
-            printf("You chose go to the Blacksmith");
-            blacksmith_menu();
-            break;
-        case 5:
-            printf("Thanks for playing!");
-            break;
-        default:
-            printf("Invalid choice");
-    }
-    print_stats(); // Výpis statistik po akci
-
-    // Pokud hráč nevybral ukončení, hra pokračuje rekurzivně
-    if (choice != 5) {
-        game();
-    }
+    int choice;
+    do {
+        choice = cross_menu();
+        switch (choice) {
+            case 1: pub_menu(); break;
+            case 2: training_menu(); break;
+            case 3: arena_menu(); break;
+            case 4: blacksmith_menu(); break;
+            case 5: quests_menu(); break;
+            case 6: printf("Thanks for playing!\n"); break;
+            default: printf("Invalid choice!\n");
+        }
+        print_stats();
+    } while (choice != 6);
 }
